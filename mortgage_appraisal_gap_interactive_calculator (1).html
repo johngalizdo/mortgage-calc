@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mortgage & Appraisal Gap Interactive Calculator</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js for interactive visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              400: '#2dd4bf',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+            },
+            navy: {
+              800: '#0f172a',
+              850: '#0b1120',
+              900: '#020617',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom range input styling */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 20px;
+      width: 20px;
+      border-radius: 9999px;
+      background: #0d9488;
+      cursor: pointer;
+      margin-top: -6px;
+      box-shadow: 0 2px 6px rgba(13, 148, 136, 0.4);
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: #14b8a6;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 8px;
+      cursor: pointer;
+      background: #e2e8f0;
+      border-radius: 9999px;
+    }
+    .dark input[type=range]::-webkit-slider-runnable-track {
+      background: #334155;
+    }
+    /* Hide spin buttons */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased selection:bg-teal-500 selection:text-white">
+
+  <!-- Header Banner -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-teal-500/20 text-slate-950 font-bold text-xl">
+          <svg class="w-6 h-6 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            Mortgage & Appraisal Gap Hub
+            <span class="text-xs bg-teal-500/10 text-teal-400 font-semibold px-2 py-0.5 rounded-full border border-teal-500/20">Live Tool</span>
+          </h1>
+          <p class="text-xs text-slate-400">Interactive financial planning & appraisal risk modeling</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="quickPresetBtn" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700 transition">
+          ↺ Reset to Benchmark ($400k)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Top Key Metric Callout Banner -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-slate-800/60 border border-slate-700/70 p-5 rounded-2xl relative overflow-hidden backdrop-blur-sm shadow-xl">
+        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-teal-500/5 rounded-full blur-xl pointer-events-none"></div>
+        <p class="text-xs uppercase tracking-wider font-semibold text-slate-400">Estimated Monthly P&amp;I</p>
+        <p id="topMonthlyPI" class="text-3xl font-extrabold text-teal-400 mt-2">$2,439</p>
+        <p class="text-xs text-slate-400 mt-1">Principal &amp; Interest only</p>
+      </div>
+
+      <div class="bg-slate-800/60 border border-slate-700/70 p-5 rounded-2xl relative overflow-hidden backdrop-blur-sm shadow-xl">
+        <p class="text-xs uppercase tracking-wider font-semibold text-slate-400">Total Monthly Payment</p>
+        <p id="topTotalMonthly" class="text-3xl font-extrabold text-white mt-2">$2,872</p>
+        <p class="text-xs text-slate-400 mt-1">Includes tax, insurance &amp; PMI</p>
+      </div>
+
+      <div class="bg-slate-800/60 border border-slate-700/70 p-5 rounded-2xl relative overflow-hidden backdrop-blur-sm shadow-xl">
+        <p class="text-xs uppercase tracking-wider font-semibold text-slate-400">Appraisal Gap</p>
+        <p id="topAppraisalGap" class="text-3xl font-extrabold text-amber-400 mt-2">$20,000</p>
+        <p id="topAppraisalGapPct" class="text-xs text-slate-400 mt-1">5.0% of $400k contract</p>
+      </div>
+
+      <div class="bg-slate-800/60 border border-slate-700/70 p-5 rounded-2xl relative overflow-hidden backdrop-blur-sm shadow-xl">
+        <p class="text-xs uppercase tracking-wider font-semibold text-slate-400">Total Out-of-Pocket Cash</p>
+        <p id="topTotalCash" class="text-3xl font-extrabold text-emerald-400 mt-2">$60,000</p>
+        <p class="text-xs text-slate-400 mt-1">Down payment + full appraisal gap</p>
+      </div>
+    </section>
+
+    <!-- Appraisal Gap Spotlight Card -->
+    <section class="bg-gradient-to-br from-slate-800/90 via-slate-800/60 to-slate-900 border border-amber-500/30 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
+      <div class="absolute top-0 right-0 transform translate-x-8 -translate-y-8 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-700/80">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-amber-500/15 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-semibold mb-3">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Appraisal Analysis Engine
+          </div>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Understanding &amp; Bridging the Appraisal Gap</h2>
+          <p class="text-slate-300 text-sm mt-1 max-w-2xl">
+            Lenders calculate loan maximums from the <em>lower</em> of contract price or appraised value. When an appraisal falls short, a gap occurs that typically requires buyer cash or renegotiation.
+          </p>
+        </div>
+
+        <!-- Contract vs Appraisal Quick Inputs -->
+        <div class="grid grid-cols-2 gap-4 bg-slate-900/80 p-4 rounded-2xl border border-slate-700/70">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Contract Price</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2 text-slate-400 text-sm">$</span>
+              <input id="contractPriceInput" type="number" step="1000" value="400000" class="w-full bg-slate-800 text-white rounded-lg pl-7 pr-3 py-1.5 text-sm font-semibold border border-slate-700 focus:outline-none focus:border-teal-500" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Appraised Value</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2 text-slate-400 text-sm">$</span>
+              <input id="appraisedValueInput" type="number" step="1000" value="380000" class="w-full bg-slate-800 text-white rounded-lg pl-7 pr-3 py-1.5 text-sm font-semibold border border-slate-700 focus:outline-none focus:border-amber-500" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual Progress Bar / Gap Breakdown -->
+      <div class="mt-6 space-y-4">
+        <div class="flex justify-between items-end text-sm">
+          <div>
+            <span class="font-medium text-slate-300">Contract Coverage:</span>
+            <span id="supportedPctText" class="font-bold text-teal-400 text-base ml-1">95.0% Supported</span>
+          </div>
+          <div>
+            <span class="font-medium text-slate-300">Uncovered Gap:</span>
+            <span id="gapPctText" class="font-bold text-amber-400 text-base ml-1">5.0% ($20,000)</span>
+          </div>
+        </div>
+
+        <!-- Dual Stacked Bar -->
+        <div class="h-6 w-full bg-slate-950 rounded-full p-1 flex overflow-hidden border border-slate-700">
+          <div id="barSupported" style="width: 95%;" class="h-full bg-gradient-to-r from-teal-600 to-teal-400 rounded-l-full transition-all duration-500 relative group">
+            <span class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-slate-950 tracking-wide uppercase">Appraised ($380,000)</span>
+          </div>
+          <div id="barGap" style="width: 5%;" class="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-r-full transition-all duration-500 relative group animate-pulse">
+            <span class="sr-only">Gap</span>
+          </div>
+        </div>
+
+        <!-- 3 Resolution Paths Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-700/60 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-teal-400 text-xs font-semibold uppercase tracking-wider">
+                <span class="w-2 h-2 rounded-full bg-teal-400"></span> Scenario A: Buyer Covers
+              </div>
+              <p class="text-sm text-slate-300 mt-2 font-medium">Buyer brings additional cash to cover entire discrepancy.</p>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-800 flex justify-between items-center text-xs">
+              <span class="text-slate-400">Additional Cash:</span>
+              <span id="scenarioACash" class="font-bold text-amber-300 text-sm">+$20,000</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-700/60 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider">
+                <span class="w-2 h-2 rounded-full bg-indigo-400"></span> Scenario B: 50/50 Split
+              </div>
+              <p class="text-sm text-slate-300 mt-2 font-medium">Buyer adds half the gap, seller drops contract price by half.</p>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-800 flex justify-between items-center text-xs">
+              <span class="text-slate-400">Buyer Cash / Seller Drop:</span>
+              <span id="scenarioBCash" class="font-bold text-indigo-300 text-sm">+$10,000 ea.</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-700/60 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Scenario C: Seller Drops
+              </div>
+              <p class="text-sm text-slate-300 mt-2 font-medium">Seller adjusts sale price to appraised value. Original loan preserves.</p>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-800 flex justify-between items-center text-xs">
+              <span class="text-slate-400">New Purchase Price:</span>
+              <span id="scenarioCPrice" class="font-bold text-emerald-300 text-sm">$380,000</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-[11px] text-slate-500 italic text-center pt-2">
+          *Hypothetical example for educational purposes, not actual Maryland market data. Subject to contract contingencies and lender underwriting.
+        </p>
+      </div>
+    </section>
+
+    <!-- Two Column Main Layout: Inputs & Financial Breakdown -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- Left Column: Inputs Form (7 cols) -->
+      <section class="lg:col-span-7 space-y-6">
+        
+        <div class="bg-slate-800/80 border border-slate-700 rounded-3xl p-6 sm:p-7 shadow-xl backdrop-blur-sm space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-700/80 pb-4">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              Loan Configuration
+            </h2>
+            <span class="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full font-medium">30-Year Fixed</span>
+          </div>
+
+          <!-- Home Price Input -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <label for="homePrice" class="text-sm font-semibold text-slate-200">Home Price</label>
+              <div class="relative w-40">
+                <span class="absolute left-3 top-2 text-slate-400 font-semibold text-sm">$</span>
+                <input id="homePrice" type="number" min="50000" max="2500000" step="5000" value="400000" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-7 pr-3 py-1.5 text-right font-bold text-white focus:outline-none focus:border-teal-500 transition text-sm">
+              </div>
+            </div>
+            <input id="homePriceSlider" type="range" min="100000" max="1500000" step="5000" value="400000" class="w-full">
+            <div class="flex justify-between text-[11px] text-slate-500">
+              <span>$100,000</span>
+              <span>$750,000</span>
+              <span>$1,500,000</span>
+            </div>
+          </div>
+
+          <!-- Down Payment Input -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                <label for="downPaymentVal" class="text-sm font-semibold text-slate-200">Down Payment</label>
+                <div class="inline-flex rounded-lg bg-slate-900 p-0.5 border border-slate-700 text-xs">
+                  <button id="dpTypePct" class="px-2 py-0.5 rounded-md font-semibold bg-teal-500 text-slate-950 transition">%</button>
+                  <button id="dpTypeDollar" class="px-2 py-0.5 rounded-md font-semibold text-slate-400 hover:text-white transition">$</button>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="dpDollarEquivalent" class="text-xs text-slate-400 font-mono">($40,000)</span>
+                <div class="relative w-32">
+                  <span id="dpPrefix" class="hidden absolute left-3 top-2 text-slate-400 font-semibold text-sm">$</span>
+                  <input id="downPaymentVal" type="number" step="0.5" value="10" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-right font-bold text-white focus:outline-none focus:border-teal-500 transition text-sm">
+                  <span id="dpSuffix" class="absolute right-3 top-2 text-slate-400 font-semibold text-sm">%</span>
+                </div>
+              </div>
+            </div>
+            <input id="downPaymentSlider" type="range" min="0" max="50" step="1" value="10" class="w-full">
+            <div class="flex justify-between text-[11px] text-slate-500">
+              <span>0% (FHA/VA)</span>
+              <span>10% (Scenario)</span>
+              <span>20% (No PMI)</span>
+              <span>50%</span>
+            </div>
+          </div>
+
+          <!-- Loan Term Selection -->
+          <div class="space-y-2">
+            <label class="text-sm font-semibold text-slate-200 block">Loan Term</label>
+            <div class="grid grid-cols-3 gap-3">
+              <button class="term-btn py-2.5 px-3 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 font-semibold text-sm hover:border-slate-500 transition" data-term="15">
+                15 Years
+              </button>
+              <button class="term-btn py-2.5 px-3 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 font-semibold text-sm hover:border-slate-500 transition" data-term="20">
+                20 Years
+              </button>
+              <button class="term-btn active py-2.5 px-3 rounded-xl border border-teal-500 bg-teal-500/10 text-teal-300 font-semibold text-sm transition" data-term="30">
+                30 Years
+              </button>
+            </div>
+          </div>
+
+          <!-- Interest Rate Input -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <label for="interestRate" class="text-sm font-semibold text-slate-200">Interest Rate</label>
+              <div class="relative w-32">
+                <input id="interestRate" type="number" min="1" max="15" step="0.01" value="7.18" class="w-full bg-slate-900 border border-slate-700 rounded-xl pr-7 pl-3 py-1.5 text-right font-bold text-white focus:outline-none focus:border-teal-500 transition text-sm">
+                <span class="absolute right-3 top-2 text-slate-400 font-semibold text-sm">%</span>
+              </div>
+            </div>
+            <input id="interestRateSlider" type="range" min="3.0" max="12.0" step="0.05" value="7.18" class="w-full">
+            <div class="flex justify-between text-[11px] text-slate-500">
+              <span>3.0%</span>
+              <span>7.18% (Standard)</span>
+              <span>12.0%</span>
+            </div>
+          </div>
+
+          <!-- Collapsible Taxes, Insurance & Fees -->
+          <div class="pt-4 border-t border-slate-700/80">
+            <button id="toggleExpensesBtn" class="w-full flex items-center justify-between text-left text-sm font-semibold text-slate-300 hover:text-white transition">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+                Taxes, Insurance &amp; PMI Customization
+              </span>
+              <span class="text-xs text-teal-400" id="expensesSummaryLabel">+$433/mo</span>
+            </button>
+
+            <div id="expensesPanel" class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <label class="block text-xs text-slate-400 mb-1">Property Tax (Annual %)</label>
+                <div class="relative">
+                  <input id="taxRateInput" type="number" step="0.05" value="1.0" class="w-full bg-slate-800 text-white rounded-lg px-2 py-1 text-sm border border-slate-700 text-right pr-6 focus:outline-none focus:border-teal-500">
+                  <span class="absolute right-2 top-1 text-xs text-slate-400">%</span>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1 flex justify-between">
+                  <span>Monthly:</span>
+                  <span id="taxMonthlyAmt" class="font-semibold text-white">$333</span>
+                </div>
+              </div>
+
+              <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <label class="block text-xs text-slate-400 mb-1">Home Insurance (Annual $)</label>
+                <div class="relative">
+                  <span class="absolute left-2 top-1 text-xs text-slate-400">$</span>
+                  <input id="insuranceAnnualInput" type="number" step="50" value="1200" class="w-full bg-slate-800 text-white rounded-lg pl-5 pr-2 py-1 text-sm border border-slate-700 text-right focus:outline-none focus:border-teal-500">
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1 flex justify-between">
+                  <span>Monthly:</span>
+                  <span id="insuranceMonthlyAmt" class="font-semibold text-white">$100</span>
+                </div>
+              </div>
+
+              <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <label class="block text-xs text-slate-400 mb-1">PMI (Under 20% DP)</label>
+                <div class="relative">
+                  <input id="pmiRateInput" type="number" step="0.05" value="0.5" class="w-full bg-slate-800 text-white rounded-lg px-2 py-1 text-sm border border-slate-700 text-right pr-6 focus:outline-none focus:border-teal-500">
+                  <span class="absolute right-2 top-1 text-xs text-slate-400">%</span>
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1 flex justify-between">
+                  <span>Monthly:</span>
+                  <span id="pmiMonthlyAmt" class="font-semibold text-white">$0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loan Summary Details Card -->
+        <div class="bg-slate-800/50 border border-slate-700/60 rounded-3xl p-6">
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">Loan Structure Breakdown</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            <div class="p-3 bg-slate-900/70 rounded-xl">
+              <span class="text-xs text-slate-400 block">Base Loan Amount</span>
+              <span id="summaryLoanAmt" class="text-base font-bold text-white mt-1 block">$360,000</span>
+            </div>
+            <div class="p-3 bg-slate-900/70 rounded-xl">
+              <span class="text-xs text-slate-400 block">Down Payment</span>
+              <span id="summaryDownPay" class="text-base font-bold text-teal-400 mt-1 block">$40,000</span>
+            </div>
+            <div class="p-3 bg-slate-900/70 rounded-xl">
+              <span class="text-xs text-slate-400 block">Total Interest Paid</span>
+              <span id="summaryTotalInterest" class="text-base font-bold text-indigo-400 mt-1 block">$518,040</span>
+            </div>
+            <div class="p-3 bg-slate-900/70 rounded-xl">
+              <span class="text-xs text-slate-400 block">Total Payments</span>
+              <span id="summaryTotalCost" class="text-base font-bold text-emerald-400 mt-1 block">$878,040</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Visualizations & Payment Breakdown (5 cols) -->
+      <section class="lg:col-span-5 space-y-6">
+        
+        <!-- Payment Donut Card -->
+        <div class="bg-slate-800/80 border border-slate-700 rounded-3xl p-6 sm:p-7 shadow-xl backdrop-blur-sm">
+          <div class="flex items-center justify-between border-b border-slate-700/80 pb-4">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+              </svg>
+              Monthly Payment Breakdown
+            </h2>
+            <span id="pillTerm" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-700 text-teal-300">30 Yrs</span>
+          </div>
+
+          <!-- Chart Area -->
+          <div class="relative w-64 h-64 mx-auto my-6 flex items-center justify-center">
+            <canvas id="paymentDonutChart"></canvas>
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total / Mo</span>
+              <span id="donutCenterTotal" class="text-2xl font-black text-white">$2,872</span>
+              <span id="donutCenterPI" class="text-[11px] text-teal-400 font-medium">P&amp;I: $2,439</span>
+            </div>
+          </div>
+
+          <!-- Legend & List -->
+          <div class="space-y-2.5 text-sm">
+            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60">
+              <div class="flex items-center gap-2">
+                <span class="w-3.5 h-3.5 rounded-full bg-teal-500"></span>
+                <span class="text-slate-300 font-medium">Principal &amp; Interest</span>
+              </div>
+              <span id="legendPI" class="font-bold text-white">$2,439</span>
+            </div>
+
+            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60">
+              <div class="flex items-center gap-2">
+                <span class="w-3.5 h-3.5 rounded-full bg-blue-500"></span>
+                <span class="text-slate-300 font-medium">Property Taxes</span>
+              </div>
+              <span id="legendTaxes" class="font-bold text-white">$333</span>
+            </div>
+
+            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60">
+              <div class="flex items-center gap-2">
+                <span class="w-3.5 h-3.5 rounded-full bg-amber-500"></span>
+                <span class="text-slate-300 font-medium">Homeowners Insurance</span>
+              </div>
+              <span id="legendInsurance" class="font-bold text-white">$100</span>
+            </div>
+
+            <div id="legendPmiRow" class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60">
+              <div class="flex items-center gap-2">
+                <span class="w-3.5 h-3.5 rounded-full bg-rose-500"></span>
+                <span class="text-slate-300 font-medium">PMI (Private Mortgage Ins.)</span>
+              </div>
+              <span id="legendPmi" class="font-bold text-white">$0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Appraisal Gap Quick Insights -->
+        <div class="bg-slate-800/60 border border-slate-700/80 rounded-3xl p-6 space-y-4">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Key Takeaways for Buyers &amp; Sellers
+          </h3>
+          <ul class="text-xs text-slate-300 space-y-2 list-disc list-inside">
+            <li><span class="font-semibold text-white">Lender Loan Limit:</span> Calculated against the <span class="text-teal-400">$380,000</span> appraisal, giving an initial loan of <span class="text-white" id="appraisedLoanLimit">$342,000</span> at 10% down.</li>
+            <li><span class="font-semibold text-white">Appraisal Clause:</span> In standard contracts, an appraisal contingency permits negotiation, seller price concession, or termination without forfeiture of earnest money.</li>
+            <li><span class="font-semibold text-white">Market Realities:</span> In competitive markets, buyers frequently offer appraisal gap guarantees (e.g. up to $10,000) to bolster offer appeal.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <!-- Amortization Schedule & Chart Section -->
+    <section class="bg-slate-800/80 border border-slate-700 rounded-3xl p-6 sm:p-8 shadow-xl">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-700">
+        <div>
+          <h3 class="text-xl font-bold text-white">Amortization Schedule &amp; Loan Paydown</h3>
+          <p class="text-xs text-slate-400 mt-1">Watch principal balance diminish and equity accrue across the loan lifetime.</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="viewChartTab" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-teal-500 text-slate-950 transition">Balance Chart</button>
+          <button id="viewTableTab" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:text-white transition">Schedule Table</button>
+        </div>
+      </div>
+
+      <!-- Amortization Chart View -->
+      <div id="amortizationChartContainer" class="pt-6">
+        <div class="w-full h-72 sm:h-80">
+          <canvas id="amortizationLineChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Amortization Table View (Hidden by default) -->
+      <div id="amortizationTableContainer" class="hidden pt-6 overflow-x-auto max-h-96">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead class="text-xs text-slate-400 uppercase bg-slate-900/80 sticky top-0">
+            <tr>
+              <th scope="col" class="px-4 py-3 rounded-l-lg">Year</th>
+              <th scope="col" class="px-4 py-3">Interest Paid</th>
+              <th scope="col" class="px-4 py-3">Principal Paid</th>
+              <th scope="col" class="px-4 py-3">Total Paid</th>
+              <th scope="col" class="px-4 py-3 rounded-r-lg">Remaining Balance</th>
+            </tr>
+          </thead>
+          <tbody id="amortizationTableBody" class="divide-y divide-slate-800">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 mt-16 py-8 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">
+      <p>Financial calculator engine for illustrative purposes only. All calculations exclude escrow reserves, points, or title fees.</p>
+      <p class="mt-1">Designed for mortgage appraisal risk evaluation &bull; Compatible with standard residential fixed loans.</p>
+    </div>
+  </footer>
+
+  <!-- Calculator Logic Script -->
+  <script>
+    // Global State
+    const state = {
+      homePrice: 400000,
+      downPaymentMode: 'percent', // 'percent' or 'dollar'
+      downPaymentPct: 10,
+      downPaymentDollar: 40000,
+      interestRate: 7.18,
+      loanTermYears: 30,
+      taxRate: 1.0,
+      annualInsurance: 1200,
+      pmiRate: 0.5,
+      contractPrice: 400000,
+      appraisedValue: 380000
+    };
+
+    // Chart Instances
+    let donutChart = null;
+    let lineChart = null;
+
+    // Helper: Currency Formatter
+    const fmt = (num) => '$' + Math.round(num).toLocaleString('en-US');
+    const fmtDec = (num, dec = 1) => Number(num).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+
+    // Initialize DOM references
+    const elements = {
+      homePrice: document.getElementById('homePrice'),
+      homePriceSlider: document.getElementById('homePriceSlider'),
+      downPaymentVal: document.getElementById('downPaymentVal'),
+      downPaymentSlider: document.getElementById('downPaymentSlider'),
+      dpTypePct: document.getElementById('dpTypePct'),
+      dpTypeDollar: document.getElementById('dpTypeDollar'),
+      dpDollarEquivalent: document.getElementById('dpDollarEquivalent'),
+      dpPrefix: document.getElementById('dpPrefix'),
+      dpSuffix: document.getElementById('dpSuffix'),
+      interestRate: document.getElementById('interestRate'),
+      interestRateSlider: document.getElementById('interestRateSlider'),
+      taxRateInput: document.getElementById('taxRateInput'),
+      insuranceAnnualInput: document.getElementById('insuranceAnnualInput'),
+      pmiRateInput: document.getElementById('pmiRateInput'),
+      contractPriceInput: document.getElementById('contractPriceInput'),
+      appraisedValueInput: document.getElementById('appraisedValueInput'),
+      
+      // Top Metric Elements
+      topMonthlyPI: document.getElementById('topMonthlyPI'),
+      topTotalMonthly: document.getElementById('topTotalMonthly'),
+      topAppraisalGap: document.getElementById('topAppraisalGap'),
+      topAppraisalGapPct: document.getElementById('topAppraisalGapPct'),
+      topTotalCash: document.getElementById('topTotalCash'),
+
+      // Appraisal Gap Elements
+      supportedPctText: document.getElementById('supportedPctText'),
+      gapPctText: document.getElementById('gapPctText'),
+      barSupported: document.getElementById('barSupported'),
+      barGap: document.getElementById('barGap'),
+      scenarioACash: document.getElementById('scenarioACash'),
+      scenarioBCash: document.getElementById('scenarioBCash'),
+      scenarioCPrice: document.getElementById('scenarioCPrice'),
+      appraisedLoanLimit: document.getElementById('appraisedLoanLimit'),
+
+      // Monthly Breakdown Donut
+      donutCenterTotal: document.getElementById('donutCenterTotal'),
+      donutCenterPI: document.getElementById('donutCenterPI'),
+      legendPI: document.getElementById('legendPI'),
+      legendTaxes: document.getElementById('legendTaxes'),
+      legendInsurance: document.getElementById('legendInsurance'),
+      legendPmi: document.getElementById('legendPmi'),
+      legendPmiRow: document.getElementById('legendPmiRow'),
+      pillTerm: document.getElementById('pillTerm'),
+      expensesSummaryLabel: document.getElementById('expensesSummaryLabel'),
+      taxMonthlyAmt: document.getElementById('taxMonthlyAmt'),
+      insuranceMonthlyAmt: document.getElementById('insuranceMonthlyAmt'),
+      pmiMonthlyAmt: document.getElementById('pmiMonthlyAmt'),
+
+      // Summary Card
+      summaryLoanAmt: document.getElementById('summaryLoanAmt'),
+      summaryDownPay: document.getElementById('summaryDownPay'),
+      summaryTotalInterest: document.getElementById('summaryTotalInterest'),
+      summaryTotalCost: document.getElementById('summaryTotalCost'),
+
+      // Table & Tabs
+      amortizationTableBody: document.getElementById('amortizationTableBody'),
+      viewChartTab: document.getElementById('viewChartTab'),
+      viewTableTab: document.getElementById('viewTableTab'),
+      amortizationChartContainer: document.getElementById('amortizationChartContainer'),
+      amortizationTableContainer: document.getElementById('amortizationTableContainer'),
+      toggleExpensesBtn: document.getElementById('toggleExpensesBtn'),
+      expensesPanel: document.getElementById('expensesPanel'),
+      quickPresetBtn: document.getElementById('quickPresetBtn')
+    };
+
+    // Calculate Mortgage Math
+    function calculateMortgage() {
+      // 1. Calculate Down Payment & Principal
+      let downPaymentAmount = 0;
+      let downPaymentPercent = 0;
+
+      if (state.downPaymentMode === 'percent') {
+        downPaymentPercent = state.downPaymentPct;
+        downPaymentAmount = (state.homePrice * state.downPaymentPct) / 100;
+        state.downPaymentDollar = downPaymentAmount;
+      } else {
+        downPaymentAmount = state.downPaymentDollar;
+        downPaymentPercent = state.homePrice > 0 ? (downPaymentAmount / state.homePrice) * 100 : 0;
+        state.downPaymentPct = downPaymentPercent;
+      }
+
+      const loanAmount = Math.max(0, state.homePrice - downPaymentAmount);
+
+      // 2. Monthly Principal & Interest: M = P [ i(1 + i)^n ] / [ (1 + i)^n – 1]
+      const monthlyRate = (state.interestRate / 100) / 12;
+      const numPayments = state.loanTermYears * 12;
+
+      let monthlyPI = 0;
+      if (loanAmount > 0) {
+        if (monthlyRate === 0) {
+          monthlyPI = loanAmount / numPayments;
+        } else {
+          monthlyPI = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
+        }
+      }
+
+      // 3. Taxes, Insurance, PMI
+      const monthlyPropertyTax = (state.homePrice * (state.taxRate / 100)) / 12;
+      const monthlyInsurance = state.annualInsurance / 12;
+      
+      // PMI typically applies if down payment < 20%
+      let monthlyPMI = 0;
+      if (downPaymentPercent < 20 && loanAmount > 0) {
+        monthlyPMI = (loanAmount * (state.pmiRate / 100)) / 12;
+      }
+
+      const totalMonthlyPayment = monthlyPI + monthlyPropertyTax + monthlyInsurance + monthlyPMI;
+
+      // 4. Appraisal Gap Calculation
+      const contract = state.contractPrice;
+      const appraised = state.appraisedValue;
+      const appraisalGap = Math.max(0, contract - appraised);
+      const supportedRatio = contract > 0 ? Math.min(100, Math.max(0, (appraised / contract) * 100)) : 100;
+      const gapRatio = 100 - supportedRatio;
+
+      // In an appraisal gap, if lender limits loan to appraised value - 10% DP:
+      const maxAppraisedLoan = appraised * (1 - (downPaymentPercent / 100));
+
+      return {
+        loanAmount,
+        downPaymentAmount,
+        downPaymentPercent,
+        monthlyPI,
+        monthlyPropertyTax,
+        monthlyInsurance,
+        monthlyPMI,
+        totalMonthlyPayment,
+        contract,
+        appraised,
+        appraisalGap,
+        supportedRatio,
+        gapRatio,
+        maxAppraisedLoan,
+        numPayments,
+        monthlyRate
+      };
+    }
+
+    // Update UI Elements
+    function updateUI() {
+      const calc = calculateMortgage();
+
+      // Top Highlights
+      elements.topMonthlyPI.textContent = fmt(calc.monthlyPI);
+      elements.topTotalMonthly.textContent = fmt(calc.totalMonthlyPayment);
+      elements.topAppraisalGap.textContent = fmt(calc.appraisalGap);
+      elements.topAppraisalGapPct.textContent = `${fmtDec(calc.gapRatio)}% of ${fmt(calc.contract)} contract`;
+      elements.topTotalCash.textContent = fmt(calc.downPaymentAmount + calc.appraisalGap);
+
+      // Appraisal Gap Section
+      elements.supportedPctText.textContent = `${fmtDec(calc.supportedRatio)}% Supported`;
+      elements.gapPctText.textContent = `${fmtDec(calc.gapRatio)}% (${fmt(calc.appraisalGap)})`;
+      
+      elements.barSupported.style.width = `${calc.supportedRatio}%`;
+      elements.barGap.style.width = `${calc.gapRatio}%`;
+
+      elements.scenarioACash.textContent = `+${fmt(calc.appraisalGap)}`;
+      elements.scenarioBCash.textContent = `+${fmt(calc.appraisalGap / 2)} ea.`;
+      elements.scenarioCPrice.textContent = fmt(calc.appraised);
+      elements.appraisedLoanLimit.textContent = fmt(calc.maxAppraisedLoan);
+
+      // Down Payment Indicator
+      elements.dpDollarEquivalent.textContent = `(${fmt(calc.downPaymentAmount)})`;
+
+      // Monthly Breakdown Card
+      elements.donutCenterTotal.textContent = fmt(calc.totalMonthlyPayment);
+      elements.donutCenterPI.textContent = `P&I: ${fmt(calc.monthlyPI)}`;
+      elements.legendPI.textContent = fmt(calc.monthlyPI);
+      elements.legendTaxes.textContent = fmt(calc.monthlyPropertyTax);
+      elements.legendInsurance.textContent = fmt(calc.monthlyInsurance);
+      elements.legendPmi.textContent = fmt(calc.monthlyPMI);
+      
+      const extraMonthly = calc.monthlyPropertyTax + calc.monthlyInsurance + calc.monthlyPMI;
+      elements.expensesSummaryLabel.textContent = `+${fmt(extraMonthly)}/mo`;
+      elements.taxMonthlyAmt.textContent = fmt(calc.monthlyPropertyTax);
+      elements.insuranceMonthlyAmt.textContent = fmt(calc.monthlyInsurance);
+      elements.pmiMonthlyAmt.textContent = fmt(calc.monthlyPMI);
+
+      elements.pillTerm.textContent = `${state.loanTermYears} Yrs`;
+
+      // Summary Card
+      const totalPaymentsLifetime = calc.monthlyPI * calc.numPayments;
+      const totalInterestLifetime = Math.max(0, totalPaymentsLifetime - calc.loanAmount);
+
+      elements.summaryLoanAmt.textContent = fmt(calc.loanAmount);
+      elements.summaryDownPay.textContent = fmt(calc.downPaymentAmount);
+      elements.summaryTotalInterest.textContent = fmt(totalInterestLifetime);
+      elements.summaryTotalCost.textContent = fmt(totalPaymentsLifetime);
+
+      // Update Charts
+      updateDonutChart(calc);
+      updateAmortization(calc);
+    }
+
+    // Chart.js Donut Initialization & Update
+    function initDonutChart() {
+      const ctx = document.getElementById('paymentDonutChart').getContext('2d');
+      donutChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Principal & Interest', 'Property Taxes', 'Homeowners Insurance', 'PMI'],
+          datasets: [{
+            data: [2439, 333, 100, 0],
+            backgroundColor: ['#14b8a6', '#3b82f6', '#f59e0b', '#f43f5e'],
+            borderWidth: 2,
+            borderColor: '#1e293b',
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          cutout: '72%',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              titleColor: '#f1f5f9',
+              bodyColor: '#cbd5e1',
+              padding: 10,
+              cornerRadius: 8,
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.label}: $${Math.round(context.raw).toLocaleString()}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function updateDonutChart(calc) {
+      if (!donutChart) return;
+      donutChart.data.datasets[0].data = [
+        Math.round(calc.monthlyPI),
+        Math.round(calc.monthlyPropertyTax),
+        Math.round(calc.monthlyInsurance),
+        Math.round(calc.monthlyPMI)
+      ];
+      donutChart.update();
+    }
+
+    // Generate Amortization Schedule Data
+    function buildAmortizationSchedule(calc) {
+      let balance = calc.loanAmount;
+      const yearlyData = [];
+      let accumulatedInterest = 0;
+      let accumulatedPrincipal = 0;
+
+      for (let year = 1; year <= state.loanTermYears; year++) {
+        let yearInterest = 0;
+        let yearPrincipal = 0;
+
+        for (let month = 1; month <= 12; month++) {
+          if (balance <= 0) break;
+          const interestForMonth = balance * calc.monthlyRate;
+          const principalForMonth = Math.min(balance, calc.monthlyPI - interestForMonth);
+          
+          yearInterest += interestForMonth;
+          yearPrincipal += principalForMonth;
+          balance -= principalForMonth;
+        }
+
+        accumulatedInterest += yearInterest;
+        accumulatedPrincipal += yearPrincipal;
+
+        yearlyData.push({
+          year,
+          yearInterest,
+          yearPrincipal,
+          balance: Math.max(0, balance),
+          accumulatedInterest,
+          accumulatedPrincipal
+        });
+
+        if (balance <= 0) break;
+      }
+      return yearlyData;
+    }
+
+    // Initialize Line Chart for Amortization
+    function initLineChart() {
+      const ctx = document.getElementById('amortizationLineChart').getContext('2d');
+      lineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Remaining Balance',
+              data: [],
+              borderColor: '#0d9488',
+              backgroundColor: 'rgba(13, 148, 136, 0.12)',
+              fill: true,
+              tension: 0.35,
+              borderWidth: 2.5,
+              pointRadius: 0,
+              pointHoverRadius: 6
+            },
+            {
+              label: 'Total Interest Paid',
+              data: [],
+              borderColor: '#6366f1',
+              backgroundColor: 'rgba(99, 102, 241, 0.08)',
+              fill: true,
+              tension: 0.35,
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointRadius: 0,
+              pointHoverRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(51, 65, 85, 0.4)' },
+              ticks: { color: '#94a3b8', font: { size: 11 } }
+            },
+            y: {
+              grid: { color: 'rgba(51, 65, 85, 0.4)' },
+              ticks: {
+                color: '#94a3b8',
+                font: { size: 11 },
+                callback: (val) => '$' + (val >= 1000 ? (val / 1000) + 'k' : val)
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: { color: '#cbd5e1', font: { size: 12, weight: 600 } }
+            },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              padding: 12,
+              cornerRadius: 10,
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.dataset.label}: $${Math.round(context.raw).toLocaleString()}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function updateAmortization(calc) {
+      const schedule = buildAmortizationSchedule(calc);
+
+      // Update Line Chart
+      if (lineChart) {
+        lineChart.data.labels = schedule.map(d => `Yr ${d.year}`);
+        lineChart.data.datasets[0].data = schedule.map(d => Math.round(d.balance));
+        lineChart.data.datasets[1].data = schedule.map(d => Math.round(d.accumulatedInterest));
+        lineChart.update();
+      }
+
+      // Update Table
+      elements.amortizationTableBody.innerHTML = '';
+      schedule.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition';
+        tr.innerHTML = `
+          <td class="px-4 py-2.5 font-semibold text-white">Year ${row.year}</td>
+          <td class="px-4 py-2.5 text-indigo-300">${fmt(row.yearInterest)}</td>
+          <td class="px-4 py-2.5 text-teal-300">${fmt(row.yearPrincipal)}</td>
+          <td class="px-4 py-2.5 text-slate-300">${fmt(row.yearInterest + row.yearPrincipal)}</td>
+          <td class="px-4 py-2.5 font-mono text-slate-200">${fmt(row.balance)}</td>
+        `;
+        elements.amortizationTableBody.appendChild(tr);
+      });
+    }
+
+    // Bind Event Listeners
+    function setupEventListeners() {
+      // Home Price
+      elements.homePrice.addEventListener('input', (e) => {
+        state.homePrice = parseFloat(e.target.value) || 0;
+        elements.homePriceSlider.value = state.homePrice;
+        // Keep contract price in sync by default
+        elements.contractPriceInput.value = state.homePrice;
+        state.contractPrice = state.homePrice;
+        updateUI();
+      });
+
+      elements.homePriceSlider.addEventListener('input', (e) => {
+        state.homePrice = parseFloat(e.target.value);
+        elements.homePrice.value = state.homePrice;
+        elements.contractPriceInput.value = state.homePrice;
+        state.contractPrice = state.homePrice;
+        updateUI();
+      });
+
+      // Down Payment Mode Toggle
+      elements.dpTypePct.addEventListener('click', () => {
+        state.downPaymentMode = 'percent';
+        elements.dpTypePct.className = 'px-2 py-0.5 rounded-md font-semibold bg-teal-500 text-slate-950 transition';
+        elements.dpTypeDollar.className = 'px-2 py-0.5 rounded-md font-semibold text-slate-400 hover:text-white transition';
+        elements.dpPrefix.classList.add('hidden');
+        elements.dpSuffix.classList.remove('hidden');
+        elements.downPaymentSlider.max = 50;
+        elements.downPaymentSlider.step = 1;
+        elements.downPaymentSlider.value = state.downPaymentPct;
+        elements.downPaymentVal.value = fmtDec(state.downPaymentPct, 1);
+        updateUI();
+      });
+
+      elements.dpTypeDollar.addEventListener('click', () => {
+        state.downPaymentMode = 'dollar';
+        elements.dpTypeDollar.className = 'px-2 py-0.5 rounded-md font-semibold bg-teal-500 text-slate-950 transition';
+        elements.dpTypePct.className = 'px-2 py-0.5 rounded-md font-semibold text-slate-400 hover:text-white transition';
+        elements.dpPrefix.classList.remove('hidden');
+        elements.dpSuffix.classList.add('hidden');
+        elements.downPaymentSlider.max = state.homePrice;
+        elements.downPaymentSlider.step = 1000;
+        elements.downPaymentSlider.value = state.downPaymentDollar;
+        elements.downPaymentVal.value = Math.round(state.downPaymentDollar);
+        updateUI();
+      });
+
+      elements.downPaymentVal.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value) || 0;
+        if (state.downPaymentMode === 'percent') {
+          state.downPaymentPct = val;
+          elements.downPaymentSlider.value = val;
+        } else {
+          state.downPaymentDollar = val;
+          elements.downPaymentSlider.value = val;
+        }
+        updateUI();
+      });
+
+      elements.downPaymentSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (state.downPaymentMode === 'percent') {
+          state.downPaymentPct = val;
+          elements.downPaymentVal.value = val;
+        } else {
+          state.downPaymentDollar = val;
+          elements.downPaymentVal.value = val;
+        }
+        updateUI();
+      });
+
+      // Term Buttons
+      document.querySelectorAll('.term-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.term-btn').forEach(b => {
+            b.classList.remove('border-teal-500', 'bg-teal-500/10', 'text-teal-300', 'active');
+            b.classList.add('border-slate-700', 'bg-slate-900', 'text-slate-300');
+          });
+          btn.classList.remove('border-slate-700', 'bg-slate-900', 'text-slate-300');
+          btn.classList.add('border-teal-500', 'bg-teal-500/10', 'text-teal-300', 'active');
+          state.loanTermYears = parseInt(btn.dataset.term, 10);
+          updateUI();
+        });
+      });
+
+      // Interest Rate
+      elements.interestRate.addEventListener('input', (e) => {
+        state.interestRate = parseFloat(e.target.value) || 0;
+        elements.interestRateSlider.value = state.interestRate;
+        updateUI();
+      });
+
+      elements.interestRateSlider.addEventListener('input', (e) => {
+        state.interestRate = parseFloat(e.target.value);
+        elements.interestRate.value = state.interestRate;
+        updateUI();
+      });
+
+      // Taxes, Insurance & Fees
+      elements.taxRateInput.addEventListener('input', (e) => {
+        state.taxRate = parseFloat(e.target.value) || 0;
+        updateUI();
+      });
+
+      elements.insuranceAnnualInput.addEventListener('input', (e) => {
+        state.annualInsurance = parseFloat(e.target.value) || 0;
+        updateUI();
+      });
+
+      elements.pmiRateInput.addEventListener('input', (e) => {
+        state.pmiRate = parseFloat(e.target.value) || 0;
+        updateUI();
+      });
+
+      // Appraisal Specific Inputs
+      elements.contractPriceInput.addEventListener('input', (e) => {
+        state.contractPrice = parseFloat(e.target.value) || 0;
+        updateUI();
+      });
+
+      elements.appraisedValueInput.addEventListener('input', (e) => {
+        state.appraisedValue = parseFloat(e.target.value) || 0;
+        updateUI();
+      });
+
+      // Toggle Expenses Panel
+      elements.toggleExpensesBtn.addEventListener('click', () => {
+        elements.expensesPanel.classList.toggle('hidden');
+      });
+
+      // Tabs: Chart vs Table
+      elements.viewChartTab.addEventListener('click', () => {
+        elements.viewChartTab.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-teal-500 text-slate-950 transition';
+        elements.viewTableTab.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:text-white transition';
+        elements.amortizationChartContainer.classList.remove('hidden');
+        elements.amortizationTableContainer.classList.add('hidden');
+      });
+
+      elements.viewTableTab.addEventListener('click', () => {
+        elements.viewTableTab.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-teal-500 text-slate-950 transition';
+        elements.viewChartTab.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:text-white transition';
+        elements.amortizationTableContainer.classList.remove('hidden');
+        elements.amortizationChartContainer.classList.add('hidden');
+      });
+
+      // Reset Preset
+      elements.quickPresetBtn.addEventListener('click', () => {
+        state.homePrice = 400000;
+        state.downPaymentMode = 'percent';
+        state.downPaymentPct = 10;
+        state.interestRate = 7.18;
+        state.loanTermYears = 30;
+        state.contractPrice = 400000;
+        state.appraisedValue = 380000;
+
+        elements.homePrice.value = 400000;
+        elements.homePriceSlider.value = 400000;
+        elements.downPaymentVal.value = 10;
+        elements.downPaymentSlider.value = 10;
+        elements.interestRate.value = 7.18;
+        elements.interestRateSlider.value = 7.18;
+        elements.contractPriceInput.value = 400000;
+        elements.appraisedValueInput.value = 380000;
+
+        document.querySelectorAll('.term-btn').forEach(b => {
+          if (b.dataset.term === '30') {
+            b.classList.remove('border-slate-700', 'bg-slate-900', 'text-slate-300');
+            b.classList.add('border-teal-500', 'bg-teal-500/10', 'text-teal-300', 'active');
+          } else {
+            b.classList.remove('border-teal-500', 'bg-teal-500/10', 'text-teal-300', 'active');
+            b.classList.add('border-slate-700', 'bg-slate-900', 'text-slate-300');
+          }
+        });
+
+        elements.dpTypePct.click();
+        updateUI();
+      });
+    }
+
+    // Initialize application on load
+    window.onload = function () {
+      initDonutChart();
+      initLineChart();
+      setupEventListeners();
+      updateUI();
+    };
+  </script>
+</body>
+</html>
